@@ -2,31 +2,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Calendar, FileText, BookOpen } from "lucide-react";
 
-interface QueryCardProps {
-  query: {
-    id: string;
-    doeEdition: string;
-    date: string;
-    reference: string;
-    aiResponseExcerpt: string;
-    fullResponse: string;
-    topics: string[];
-  };
-  onClick: () => void;
+
+export interface Documento {
+  id: number
+  tipo: string
+  ref: string
+  link: string
+  year: number
+  number: number
+  dia: string
+}
+
+export interface QueryData {
+  ai_response: string
+  ai_response_short: string
+  document_id: number
+  id: number
+  document: Documento
+}
+
+export interface QueryCardProps {
+  query: QueryData
+  onClick: () => void
 }
 
 export function QueryCard({ query, onClick }: QueryCardProps) {
-//   const statusColors = {
-//     processed: "bg-green-100 text-green-800",
-//     pending: "bg-yellow-100 text-yellow-800", 
-//     error: "bg-red-100 text-red-800"
-//   };
-
-//   const statusLabels = {
-//     processed: "Processado",
-//     pending: "Pendente",
-//     error: "Erro"
-//   };
 
   return (
     <Card 
@@ -37,7 +37,8 @@ export function QueryCard({ query, onClick }: QueryCardProps) {
         <div className="flex items-start justify-between">
           <CardTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-blue-600" />
-            DOE {query.doeEdition}
+            {`DOEPI nº ${query.document.number}/${query.document.year}`}
+            <a href={query.document.link} className="text-blue-600 font-normal underline">link para acesso</a>
           </CardTitle>
           {/* <Badge className={`${statusColors[query.status]} border-0`}>
             {statusLabels[query.status]}
@@ -46,18 +47,18 @@ export function QueryCard({ query, onClick }: QueryCardProps) {
         <div className="flex items-center gap-4 text-muted-foreground">
           <div className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            <span>{query.date}</span>
+            <span>{query.document.dia}</span>
           </div>
           <div className="flex items-center gap-1">
             <BookOpen className="w-4 h-4" />
-            <span>{query.reference}</span>
+            <span>{query.document.ref}</span>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           <p className="text-gray-700 line-clamp-3 leading-relaxed">
-            {query.aiResponseExcerpt}
+            {query.ai_response_short}
           </p>
           {/* <div className="flex flex-wrap gap-1">
             {query.topics.map((topic, index) => (

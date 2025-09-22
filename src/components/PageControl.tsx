@@ -7,6 +7,7 @@ interface PageControlProps {
     currentPage: number
     setCurrentPage: (value: SetStateAction<number>) => void
     itemsPerPage: number
+    totalItems: number
 }
 
 export function PageControl({
@@ -14,16 +15,14 @@ export function PageControl({
     currentPage,
     setCurrentPage,
     itemsPerPage,
+    totalItems,
 }: PageControlProps) {
     return totalPages > 1 && (
         <div className="mt-8 pt-6 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="text-sm text-muted-foreground">
-                    Mostrando 100 resultados
+                    {`Mostrando ${(currentPage - 1) * itemsPerPage + 1} a ${Math.min(currentPage * itemsPerPage, totalItems)} de ${totalItems} resultados`}
                 </div>
-                {/* <div className="text-sm text-muted-foreground">
-                    Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredQueries.length)} de {filteredQueries.length} resultados
-                </div> */}
                 <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
