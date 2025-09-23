@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { Calendar, FileText, BookOpen } from "lucide-react";
+import { Calendar, FileText, BookOpen, Bot } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 
 export interface Documento {
@@ -15,6 +16,7 @@ export interface Documento {
 
 export interface QueryData {
   ai_response: string
+  ai_model: string
   ai_response_short: string
   document_id: number
   id: number
@@ -40,14 +42,12 @@ export function QueryCard({ query, onClick }: QueryCardProps) {
             {`DOEPI nº ${query.document.number}/${query.document.year}`}
             <a href={query.document.link} className="text-blue-600 font-normal underline">link para acesso</a>
           </CardTitle>
-          {/* <Badge className={`${statusColors[query.status]} border-0`}>
-            {statusLabels[query.status]}
-          </Badge> */}
+          <div className="flex text-sm items-center gap-1 text-muted-foreground"><Bot /> <span>{query.ai_model}</span></div>
         </div>
         <div className="flex items-center gap-4 text-muted-foreground">
           <div className="flex items-center gap-1">
             <Calendar className="w-4 h-4" />
-            <span>{query.document.dia}</span>
+            <span>{formatDate(query.document.dia)}</span>
           </div>
           <div className="flex items-center gap-1">
             <BookOpen className="w-4 h-4" />
