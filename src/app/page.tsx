@@ -1,17 +1,18 @@
 "use client"
 
-import { useEffect, useState } from 'react';
+import { CSSProperties, useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Download, Brain, FileText, Calendar, Loader2 } from 'lucide-react';
 import ReactMarkdown from "react-markdown"
 import { toast } from 'sonner';
+import { List } from "react-virtualized"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { QueryCard, QueryData } from '@/components/QueryCard';
 import { PageControl } from '@/components/PageControl';
 import { QueryDetailModal } from '@/components/QueryDetailModal';
-import { formatDate } from '@/lib/utils';
+import { dateStrToDateFormat, formatDate } from '@/lib/utils';
 import { DatePicker } from '@/components/DatePicker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,6 +34,12 @@ interface Historico {
   data: QueryData[]
 }
 
+const API_BASE_URL = "http://localhost:8080"
+
+const listHeight = 400;
+const rowHeight = 50;
+const rowWidth = 700;
+
 export default function App() {
   const [ultimoDoe, setUltimoDoe] = useState<respostaDoe | null>(null);
   const [listDoe, setListDoe] = useState<Array<respostaDoe>>([]);
@@ -47,9 +54,8 @@ export default function App() {
   const [modelOpen, setModalOpen] = useState(false)
   const [selectedQuery, setSelectedQuery] = useState<QueryData | null>(null)
   const [selectedModel, setSelectedModel] = useState("gemini-2.5-pro")
-  const [doeEditionFilter, setDoeEditionFilter] = useState("")
-  const [doeNumberFilter, setDoeNumberFilter] = useState("")
-  const [edicao, setEdicao] = useState("")
+  const [numeroFilter, setNumeroFilter] = useState("")
+  const [edicaoFilter, setEdicaoFilter] = useState("")
 
   const availableModels = [
     {
@@ -64,7 +70,7 @@ export default function App() {
   const handleFetchLatest = () => {
     setIsLoadingLastDoe(true)
     const searcParams = new URLSearchParams({ model: selectedModel })
-    const url = `http://localhost:8080/doepi/last/analyze?${searcParams.toString()}`
+    const url = `${API_BASE_URL}/doepi/last/analyze?${searcParams.toString()}`
     fetch(url, { method: "POST" })
       .then(response => response.json())
       .then(data => {
@@ -78,7 +84,7 @@ export default function App() {
     if (listDoe.length > 0) return
 
     console.log("entrou aqui")
-    fetch("http://localhost:8080/doepi")
+    fetch(`${API_BASE_URL}/doepi`)
       .then(response => response.json())
       .then(data => {
         setListDoe(data.data)
@@ -89,7 +95,7 @@ export default function App() {
   const handleFetchSelectedDoe = (ref: string) => {
     console.log("buscando doe", ref)
     const searcParams = new URLSearchParams({ ref: ref, model: selectedModel })
-    const url = `http://localhost:8080/doepi/analyze?${searcParams.toString()}`
+    const url = `${API_BASE_URL}/doepi/analyze?${searcParams.toString()}`
     setIsLoadingSelectedDoe(true)
     fetch(url, { method: "POST" })
       .then(response => response.json())
@@ -99,9 +105,14 @@ export default function App() {
       })
   }
 
-  const handleListHistory = (limit: number = 5, skip: number = 0) => {
+  const handleListHistory = (limit: number = 5, skip: number = 0, edicaoDoe?: string, numeroDoe?: number) => {
     const searcParams = new URLSearchParams({ limit: String(limit), skip: String(skip) })
-    const url = `http://localhost:8080/history?${searcParams.toString()}`
+    if (edicaoDoe)
+      searcParams.set("edicao_doe", edicaoDoe)
+    if (numeroDoe)
+      searcParams.set("numero_doe", String(numeroDoe))
+    const url = `${API_BASE_URL}/history?${searcParams.toString()}`
+    console.log(url)
     fetch(url)
       .then(response => response.json())
       .then(data => {
@@ -112,7 +123,7 @@ export default function App() {
 
   useEffect(() => {
     if (activeTab === "last-doe") {
-      fetch("http://localhost:8080/doepi/last")
+      fetch(`${API_BASE_URL}/doepi/last`)
         .then(response => response.json())
         .then(data => {
           console.log(data)
@@ -121,17 +132,33 @@ export default function App() {
     }
 
     if (activeTab === "history") {
-      handleListHistory()
+      handleListHistory(5, (currentPage - 1) * 5, dateStrToDateFormat(edicaoFilter), Number(numeroFilter))
     }
   }, [activeTab])
 
   useEffect(() => {
-    handleListHistory(5, (currentPage - 1) * 5)
+    handleListHistory(5, (currentPage - 1) * 5, dateStrToDateFormat(edicaoFilter), Number(numeroFilter))
   }, [currentPage])
 
   useEffect(() => {
     console.log(selectedModel)
   }, [selectedModel])
+
+  useEffect(() => {
+    handleListHistory(5, 0, dateStrToDateFormat(edicaoFilter), Number(numeroFilter))
+  }, [edicaoFilter, numeroFilter])
+
+  const SelectRow = ({ index, key, style }: {
+    index: number
+    key: string
+    style: CSSProperties
+  }) => {
+    return (
+      <SelectItem key={key} value={listDoe[index].referencia} style={style} onClick={() => console.log("clicou")}>
+        {`DOEPI_${listDoe[index].numero}_${listDoe[index].ano}`} - {formatDate(listDoe[index].dia)} ({listDoe[index].tipo})
+      </SelectItem>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -246,20 +273,21 @@ export default function App() {
               <CardContent>
                 <Select
                   onOpenChange={(open) => { if (open) handleFetchAllDoe() }}
-                  onValueChange={(value) => { setSelectedDoe(value) }}
+                  onValueChange={setSelectedDoe}
                   value={selectedDoe}
                 >
                   <SelectTrigger className="w-[280px] mb-5">
                     <SelectValue placeholder="Selecione uma edição do DOE" />
                   </SelectTrigger>
                   <SelectContent>
-                    {listDoe.map((doe) => {
-                      return (
-                        <SelectItem key={doe.referencia} value={doe.referencia}>
-                          {`DOEPI_${doe.numero}_${doe.ano}`} - {formatDate(doe.dia)} ({doe.tipo})
-                        </SelectItem>
-                      )
-                    })}
+                    <List
+                      width={rowWidth}
+                      height={listHeight}
+                      rowHeight={rowHeight}
+                      rowRenderer={SelectRow}
+                      rowCount={listDoe.length}
+                      overscanRowCount={3}
+                    />
                   </SelectContent>
                 </Select>
 
@@ -292,11 +320,11 @@ export default function App() {
                 <div className="grid sm:grid-cols-2 gap-5 mb-6">
                   <div>
                     <Label className="mb-2">Buscar por edição</Label>
-                    <DatePicker value={edicao} onValueChange={setEdicao} />
+                    <DatePicker value={edicaoFilter} onValueChange={setEdicaoFilter} />
                   </div>
                   <div>
                     <Label className="mb-2">Buscar por número</Label>
-                    <Input type="text" />
+                    <Input type="text" placeholder="Ex: 120" value={numeroFilter} onChange={(e) => { setNumeroFilter(e.target.value) }} />
                   </div>
                 </div>
 

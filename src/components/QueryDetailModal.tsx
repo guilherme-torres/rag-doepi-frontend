@@ -1,4 +1,6 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+"use client"
+
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Separator } from "./ui/separator";
 import { Calendar, FileText, BookOpen, Hash, Bot, ExternalLink, User } from "lucide-react";
 import { QueryData } from "./QueryCard";
@@ -22,6 +24,7 @@ export function QueryDetailModal({ isOpen, onClose, query }: QueryDetailModalPro
                         <FileText className="w-5 h-5 text-blue-600" />
                         Consulta {`DOEPI nº ${query.document.number}/${query.document.year}`}
                     </DialogTitle>
+                    <DialogDescription className="sr-only">Detalhes da consulta</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">

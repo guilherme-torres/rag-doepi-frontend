@@ -26,13 +26,15 @@ function maskDate(value: string): string {
         return `${truncated.slice(0, 2)}/${truncated.slice(2, 4)}/${truncated.slice(4)}`
     }
     if (truncated.length > 2) {
+        if (Number(truncated.slice(2)) > 12)
+            return `${truncated.slice(0, 2)}/12`
         return `${truncated.slice(0, 2)}/${truncated.slice(2)}`
     }
     return truncated
 }
 
 function parseDate(dateStr: string): Date | undefined {
-    const [day, month, year] = dateStr.split("/").map(Number)
+    let [day, month, year] = dateStr.split("/").map(Number)
     if (day && month && year && year > 1000) {
         const date = new Date(year, month - 1, day)
         if (
