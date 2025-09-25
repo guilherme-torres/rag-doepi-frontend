@@ -1,13 +1,13 @@
 "use client"
 
-import { CSSProperties, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Download, Brain, FileText, Calendar, Loader2, SearchX } from 'lucide-react';
 import ReactMarkdown from "react-markdown"
 import { toast } from 'sonner';
-import { List } from "react-virtualized"
+import { Mosaic } from "react-loading-indicators"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { QueryCard, QueryData } from '@/components/QueryCard';
 import { PageControl } from '@/components/PageControl';
@@ -239,7 +239,12 @@ export default function App() {
                   <Download className="h-4 w-4" />
                   Analisar Último DOE
                 </Button>
-                {isLoadingLastDoe && <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />}
+                {/* {isLoadingLastDoe && <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />} */}
+                {isLoadingLastDoe && (
+                  <div className="flex justify-center items-center p-6">
+                    <Mosaic style={{ fontSize: "7px" }} color={["#000000", "#000000", "#000000", "#000000"]} />
+                  </div>
+                )}
                 {aiResponseLastDoe && <Card className='mt-3'>
                   <CardContent>
                     <ReactMarkdown>{aiResponseLastDoe}</ReactMarkdown>
@@ -282,7 +287,12 @@ export default function App() {
                   <Download className="h-4 w-4" />
                   Analisar
                 </Button>
-                {isLoadingSelectedDoe && <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />}
+                {/* {isLoadingSelectedDoe && <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />} */}
+                {isLoadingSelectedDoe && (
+                  <div className="flex justify-center items-center p-6">
+                    <Mosaic style={{ fontSize: "7px" }} color={["#000000", "#000000", "#000000", "#000000"]} />
+                  </div>
+                )}
                 {aiResponseSelectedDoe && <Card className='mt-3'>
                   <CardContent>
                     <ReactMarkdown>{aiResponseSelectedDoe}</ReactMarkdown>
