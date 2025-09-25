@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { QueryCard, QueryData } from '@/components/QueryCard';
 import { PageControl } from '@/components/PageControl';
 import { QueryDetailModal } from '@/components/QueryDetailModal';
-import { dateStrToDateFormat, formatDate, isValidDate } from '@/lib/utils';
+import { dateStrToDateFormat, formatDate, isValidDate, maskOnlyNumber } from '@/lib/utils';
 import { DatePicker } from '@/components/DatePicker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,11 +35,7 @@ interface Historico {
   data: QueryData[]
 }
 
-const API_BASE_URL = "http://localhost:8080"
-
-// const listHeight = 400;
-// const rowHeight = 50;
-// const rowWidth = 700;
+const API_BASE_URL = "http://ti-guilherme:8080"
 
 export default function App() {
   const [ultimoDoe, setUltimoDoe] = useState<respostaDoe | null>(null);
@@ -311,7 +307,7 @@ export default function App() {
                   </div>
                   <div>
                     <Label className="mb-2">Buscar por número</Label>
-                    <Input type="text" placeholder="Ex: 120" value={numeroFilter} onChange={(e) => { setNumeroFilter(e.target.value) }} />
+                    <Input type="text" placeholder="Ex: 120" value={maskOnlyNumber(numeroFilter)} onChange={(e) => { setNumeroFilter(e.target.value) }} />
                   </div>
                 </div>
 
