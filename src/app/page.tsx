@@ -12,10 +12,11 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { QueryCard, QueryData } from '@/components/QueryCard';
 import { PageControl } from '@/components/PageControl';
 import { QueryDetailModal } from '@/components/QueryDetailModal';
-import { dateStrToDateFormat, formatDate } from '@/lib/utils';
+import { dateStrToDateFormat, formatDate, isValidDate } from '@/lib/utils';
 import { DatePicker } from '@/components/DatePicker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Combobox, respostaDoeKeyValue } from '@/components/combobox';
 
 
 interface respostaDoe {
@@ -36,19 +37,18 @@ interface Historico {
 
 const API_BASE_URL = "http://localhost:8080"
 
-const listHeight = 400;
-const rowHeight = 50;
-const rowWidth = 700;
+// const listHeight = 400;
+// const rowHeight = 50;
+// const rowWidth = 700;
 
 export default function App() {
   const [ultimoDoe, setUltimoDoe] = useState<respostaDoe | null>(null);
-  const [listDoe, setListDoe] = useState<Array<respostaDoe>>([]);
+  const [listDoe, setListDoe] = useState<Array<respostaDoeKeyValue>>([]);
   const [historico, sethistorico] = useState<Historico | null>(null)
   const [aiResponseLastDoe, setAiResponseLastDoe] = useState("")
   const [aiResponseSelectedDoe, setAiResponseSelectedDoe] = useState("")
   const [isLoadingLastDoe, setIsLoadingLastDoe] = useState(false)
   const [isLoadingSelectedDoe, setIsLoadingSelectedDoe] = useState(false)
-  const [selectedDoe, setSelectedDoe] = useState("")
   const [activeTab, setActiveTab] = useState("last-doe")
   const [currentPage, setCurrentPage] = useState(1)
   const [modelOpen, setModalOpen] = useState(false)
@@ -56,6 +56,8 @@ export default function App() {
   const [selectedModel, setSelectedModel] = useState("gemini-2.5-pro")
   const [numeroFilter, setNumeroFilter] = useState("")
   const [edicaoFilter, setEdicaoFilter] = useState("")
+  const [selectedDoe, setSelectedDoe] = useState("")
+  const [selectedDoeOpen, setSelectedDoeOpen] = useState(false)
 
   const availableModels = [
     {
@@ -141,24 +143,12 @@ export default function App() {
   }, [currentPage])
 
   useEffect(() => {
-    console.log(selectedModel)
-  }, [selectedModel])
-
-  useEffect(() => {
-    handleListHistory(5, 0, dateStrToDateFormat(edicaoFilter), Number(numeroFilter))
+    if (edicaoFilter && isValidDate(dateStrToDateFormat(edicaoFilter))) {
+      handleListHistory(5, 0, dateStrToDateFormat(edicaoFilter), Number(numeroFilter))
+    } else if (!edicaoFilter) {
+      handleListHistory(5, 0, undefined, Number(numeroFilter))
+    }
   }, [edicaoFilter, numeroFilter])
-
-  const SelectRow = ({ index, key, style }: {
-    index: number
-    key: string
-    style: CSSProperties
-  }) => {
-    return (
-      <SelectItem key={key} value={listDoe[index].referencia} style={style} onClick={() => console.log("clicou")}>
-        {`DOEPI_${listDoe[index].numero}_${listDoe[index].ano}`} - {formatDate(listDoe[index].dia)} ({listDoe[index].tipo})
-      </SelectItem>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -271,25 +261,22 @@ export default function App() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Select
-                  onOpenChange={(open) => { if (open) handleFetchAllDoe() }}
-                  onValueChange={setSelectedDoe}
+                <Combobox
+                  items={listDoe}
+                  open={selectedDoeOpen}
+                  setOpen={(open) => {
+                    if (open) {
+                      console.log("abrindo select")
+                      handleFetchAllDoe()
+                      setSelectedDoeOpen(true)
+                    } else {
+                      console.log("fechando select")
+                      setSelectedDoeOpen(false)
+                    }
+                  }}
                   value={selectedDoe}
-                >
-                  <SelectTrigger className="w-[280px] mb-5">
-                    <SelectValue placeholder="Selecione uma edição do DOE" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <List
-                      width={rowWidth}
-                      height={listHeight}
-                      rowHeight={rowHeight}
-                      rowRenderer={SelectRow}
-                      rowCount={listDoe.length}
-                      overscanRowCount={3}
-                    />
-                  </SelectContent>
-                </Select>
+                  setValue={setSelectedDoe}
+                />
 
                 <Button
                   onClick={() => { handleFetchSelectedDoe(selectedDoe) }}

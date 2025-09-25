@@ -18,6 +18,7 @@ export const formatDate = (dateStr: string) => {
 }
 
 export const dateStrToDateFormat = (dateStr: string) => {
+  if (dateStr.length !== 10) return undefined
   const parts = dateStr.split('/');
   if (parts.length === 3) {
     const day = parts[0];
@@ -29,7 +30,8 @@ export const dateStrToDateFormat = (dateStr: string) => {
   }
 }
 
-export const isValidDate = (dateStr: string) => {
+export const isValidDate = (dateStr?: string) => {
+  if (!dateStr) return false
   const dateObj = new Date(dateStr)
   return !isNaN(dateObj.getTime())
 }
