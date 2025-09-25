@@ -4,7 +4,7 @@ import { CSSProperties, useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Brain, FileText, Calendar, Loader2 } from 'lucide-react';
+import { Download, Brain, FileText, Calendar, Loader2, SearchX } from 'lucide-react';
 import ReactMarkdown from "react-markdown"
 import { toast } from 'sonner';
 import { List } from "react-virtualized"
@@ -312,8 +312,8 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-col gap-4 mb-8">
-                  {historico && historico.data && historico.data.length > 0 && (() => {
-                    return historico.data.map((query) => (
+                  {historico && historico.data && historico.data.length > 0 ?
+                    historico.data.map((query) => (
                       <QueryCard
                         key={query.id}
                         query={query}
@@ -322,8 +322,12 @@ export default function App() {
                           setModalOpen(true);
                         }}
                       />
-                    ));
-                  })()}
+                    ))
+                    :
+                    <div className="text-center text-gray-500 font-medium flex justify-center items-center h-20 gap-2">
+                      <SearchX /> <span>Nenhum resultado encontrado.</span>
+                    </div>
+                  }
                   {historico && historico.data && historico.data.length > 0 && (
                     <PageControl
                       totalPages={Math.max(1, Math.ceil(historico.total / historico.limit))}
