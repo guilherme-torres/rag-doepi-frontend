@@ -41,7 +41,7 @@ export function QueryCard({ query, onClick }: QueryCardProps) {
         <div className="flex items-start justify-between">
           <CardTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-blue-600" />
-            {`DOEPI nº ${query.document.number}/${query.document.year}`}
+            {`DOEPI nº ${query.document.number}/${query.document.year} (${query.document.tipo})`}
             <a href={query.document.link} className="text-blue-600 font-normal underline">link para acesso</a>
           </CardTitle>
           <div className="flex text-sm items-center gap-1 text-muted-foreground"><Bot /> <span>{query.ai_model}</span></div>
