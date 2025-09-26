@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Brain, FileText, Calendar, Loader2, SearchX } from 'lucide-react';
+import { Brain, FileText, Calendar, SearchX, Sparkles, RefreshCw } from 'lucide-react';
 import ReactMarkdown from "react-markdown"
 import { toast } from 'sonner';
 import { Mosaic } from "react-loading-indicators"
@@ -16,6 +16,11 @@ import { dateStrToDateFormat, formatDate, isValidDate, maskOnlyNumber } from '@/
 import { DatePicker } from '@/components/DatePicker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Combobox, respostaDoeKeyValue } from '@/components/combobox';
 
 
@@ -35,7 +40,7 @@ interface Historico {
   data: QueryData[]
 }
 
-const API_BASE_URL = "http://ti-guilherme:8080"
+const API_BASE_URL = "http://localhost:8080"
 
 export default function App() {
   const [ultimoDoe, setUltimoDoe] = useState<respostaDoe | null>(null);
@@ -54,6 +59,7 @@ export default function App() {
   const [edicaoFilter, setEdicaoFilter] = useState("")
   const [selectedDoe, setSelectedDoe] = useState("")
   const [selectedDoeOpen, setSelectedDoeOpen] = useState(false)
+  const [isFetchingLastDoe, setIsFetchingLastDoe] = useState(false)
 
   const availableModels = [
     {
@@ -65,68 +71,110 @@ export default function App() {
     },
   ]
 
-  const handleFetchLatest = () => {
+  const handleFetchLatest = async () => {
     setIsLoadingLastDoe(true)
     const searcParams = new URLSearchParams({ model: selectedModel })
     const url = `${API_BASE_URL}/doepi/last/analyze?${searcParams.toString()}`
-    fetch(url, { method: "POST" })
-      .then(response => response.json())
-      .then(data => {
-        console.log(data)
-        setAiResponseLastDoe(data.response)
+    try {
+      const response = await fetch(url, { method: "POST", headers: { "ngrok-skip-browser-warning": "69420" } })
+      const data = await response.json()
+      if (!response.ok) {
+        const errorMsg = data.detail || "Erro desconhecido ao analisar DOE."
+        toast.error(errorMsg)
         setIsLoadingLastDoe(false)
-      })
+        return
+      }
+      setAiResponseLastDoe(data.response)
+    } catch (err) {
+      toast.error("Erro de conexão ao analisar DOE.")
+    } finally {
+      setIsLoadingLastDoe(false)
+    }
   };
 
-  const handleFetchAllDoe = () => {
-    if (listDoe.length > 0) return
-
-    console.log("entrou aqui")
-    fetch(`${API_BASE_URL}/doepi`)
-      .then(response => response.json())
-      .then(data => {
-        setListDoe(data.data)
-        console.log(data)
-      })
+  const handleFetchAllDoe = async () => {
+    if (listDoe.length > 0) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/doepi`, { headers: { "ngrok-skip-browser-warning": "69420" } });
+      const data = await response.json();
+      if (!response.ok) {
+        const errorMsg = data.detail || "Erro desconhecido ao buscar DOEs.";
+        toast.error(errorMsg);
+        return;
+      }
+      setListDoe(data.data);
+    } catch (err) {
+      toast.error("Erro de conexão ao buscar DOEs.");
+    }
   }
 
-  const handleFetchSelectedDoe = (ref: string) => {
-    console.log("buscando doe", ref)
-    const searcParams = new URLSearchParams({ ref: ref, model: selectedModel })
-    const url = `${API_BASE_URL}/doepi/analyze?${searcParams.toString()}`
-    setIsLoadingSelectedDoe(true)
-    fetch(url, { method: "POST" })
-      .then(response => response.json())
-      .then(data => {
-        setAiResponseSelectedDoe(data.response)
-        setIsLoadingSelectedDoe(false)
-      })
+  const handleFetchSelectedDoe = async (ref: string) => {
+    console.log("buscando doe", ref);
+    const searcParams = new URLSearchParams({ ref: ref, model: selectedModel });
+    const url = `${API_BASE_URL}/doepi/analyze?${searcParams.toString()}`;
+    setIsLoadingSelectedDoe(true);
+    try {
+      const response = await fetch(url, { method: "POST", headers: { "ngrok-skip-browser-warning": "69420" } });
+      const data = await response.json();
+      if (!response.ok) {
+        const errorMsg = data.detail || "Erro desconhecido ao analisar DOE.";
+        toast.error(errorMsg);
+        setIsLoadingSelectedDoe(false);
+        return;
+      }
+      setAiResponseSelectedDoe(data.response);
+    } catch (err) {
+      toast.error("Erro de conexão ao analisar DOE.");
+    } finally {
+      setIsLoadingSelectedDoe(false);
+    }
   }
 
-  const handleListHistory = (limit: number = 5, skip: number = 0, edicaoDoe?: string, numeroDoe?: number) => {
-    const searcParams = new URLSearchParams({ limit: String(limit), skip: String(skip) })
+  const handleListHistory = async (limit: number = 5, skip: number = 0, edicaoDoe?: string, numeroDoe?: number) => {
+    const searcParams = new URLSearchParams({ limit: String(limit), skip: String(skip) });
     if (edicaoDoe)
-      searcParams.set("edicao_doe", edicaoDoe)
+      searcParams.set("edicao_doe", edicaoDoe);
     if (numeroDoe)
-      searcParams.set("numero_doe", String(numeroDoe))
-    const url = `${API_BASE_URL}/history?${searcParams.toString()}`
-    console.log(url)
-    fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        console.log(data)
-        sethistorico(data)
-      })
+      searcParams.set("numero_doe", String(numeroDoe));
+    const url = `${API_BASE_URL}/history?${searcParams.toString()}`;
+    console.log(url);
+    try {
+      const response = await fetch(url, { headers: { "ngrok-skip-browser-warning": "69420" } });
+      const data = await response.json();
+      if (!response.ok) {
+        const errorMsg = data.detail || "Erro desconhecido ao buscar histórico.";
+        toast.error(errorMsg);
+        return;
+      }
+      sethistorico(data);
+    } catch (err) {
+      toast.error("Erro de conexão ao buscar histórico.");
+    }
+  }
+
+  const fetchLastDoe = async () => {
+    console.log("buscando último doe...");
+    setIsFetchingLastDoe(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/doepi/last`, { headers: { "ngrok-skip-browser-warning": "69420" } });
+      const data = await response.json();
+      if (!response.ok) {
+        const errorMsg = data.detail || "Erro desconhecido ao buscar último DOE.";
+        toast.error(errorMsg);
+        setIsFetchingLastDoe(false);
+        return;
+      }
+      setUltimoDoe(data);
+    } catch (err) {
+      toast.error("Erro de conexão ao buscar último DOE.");
+    } finally {
+      setIsFetchingLastDoe(false);
+    }
   }
 
   useEffect(() => {
     if (activeTab === "last-doe") {
-      fetch(`${API_BASE_URL}/doepi/last`)
-        .then(response => response.json())
-        .then(data => {
-          console.log(data)
-          setUltimoDoe(data)
-        })
+      fetchLastDoe()
     }
 
     if (activeTab === "history") {
@@ -219,7 +267,7 @@ export default function App() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="bg-muted p-4 rounded-lg mb-4">
+                <div className="bg-muted p-4 rounded-lg mb-4 relative">
                   <p className="text-sm">
                     <strong>Último DOE disponível:</strong> {ultimoDoe && ultimoDoe.dia && formatDate(ultimoDoe.dia)} {ultimoDoe && `(${ultimoDoe.tipo})`}
                   </p>
@@ -229,17 +277,28 @@ export default function App() {
                   <p className="text-sm text-muted-foreground">
                     <a href={ultimoDoe ? ultimoDoe.link : "#"} className="text-blue-600 font-normal underline">Link para acesso</a>
                   </p>
+                  <Tooltip>
+                    <TooltipTrigger
+                      className="absolute right-4 top-4 cursor-pointer bg-gray-200 p-1
+                      rounded-md hover:bg-gray-300 transition-colors"
+                      onClick={fetchLastDoe}
+                    >
+                      <RefreshCw className={isFetchingLastDoe ? "animate-spin" : ""} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Atualizar último diário</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
 
                 <Button
                   onClick={handleFetchLatest}
                   size="lg"
-                  className="w-full gap-2 mb-3"
+                  className="w-full gap-2 mb-3 cursor-pointer transition-colors"
                 >
-                  <Download className="h-4 w-4" />
+                  <Sparkles className="h-4 w-4" />
                   Analisar Último DOE
                 </Button>
-                {/* {isLoadingLastDoe && <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />} */}
                 {isLoadingLastDoe && (
                   <div className="flex justify-center items-center p-6">
                     <Mosaic style={{ fontSize: "7px" }} color={["#000000", "#000000", "#000000", "#000000"]} />
@@ -282,12 +341,11 @@ export default function App() {
                 <Button
                   onClick={() => { handleFetchSelectedDoe(selectedDoe) }}
                   size="lg"
-                  className="w-full gap-2 mb-3"
+                  className="w-full gap-2 mb-3 cursor-pointer transition-colors"
                 >
-                  <Download className="h-4 w-4" />
+                  <Sparkles className="h-4 w-4" />
                   Analisar
                 </Button>
-                {/* {isLoadingSelectedDoe && <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />} */}
                 {isLoadingSelectedDoe && (
                   <div className="flex justify-center items-center p-6">
                     <Mosaic style={{ fontSize: "7px" }} color={["#000000", "#000000", "#000000", "#000000"]} />
